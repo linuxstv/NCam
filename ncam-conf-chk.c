@@ -356,43 +356,43 @@ void chk_cltab(char *classasc, CLASSTAB *clstab)
 	CLASSTAB newclstab, oldclstab;
 	memset(&newclstab, 0, sizeof(newclstab));
 	newclstab.an = newclstab.bn = 0;
-	
+
 	if(!cs_malloc(&classasc_org, sizeof(char)*strlen(classasc)+1))
 		{ return; }
-	
+
 	cs_strncpy(classasc_org, classasc, sizeof(char)*strlen(classasc)+1);
-	
+
 	for(ptr1 = strtok_r(classasc, ",", &saveptr1); ptr1; ptr1 = strtok_r(NULL, ",", &saveptr1))
 	{
 		ptr1 = trim(ptr1);
-		if(ptr1[0] == '!')
+		if(ptr1[0] == '!' && newclstab.bclass != NULL)
 			{ max_bn++; }
-		else
+		else if(newclstab.aclass != NULL)
 			{ max_an++; }
 	}
 
-	if(max_an && !cs_malloc(&newclstab.aclass, sizeof(uchar)*max_an))
-		{ NULLFREE(classasc_org); return; }	
+	if(max_an && !cs_malloc(&newclstab.aclass, sizeof(uint8_t) * max_an))
+		{ NULLFREE(classasc_org); return; }
 
-	if(max_bn && !cs_malloc(&newclstab.bclass, sizeof(uchar)*max_bn))
-		{ NULLFREE(newclstab.aclass); NULLFREE(classasc_org); return; }	
-	
+	if(max_bn && !cs_malloc(&newclstab.bclass, sizeof(uint8_t) * max_bn))
+		{ NULLFREE(newclstab.aclass); NULLFREE(classasc_org); return; }
+
 	classasc = classasc_org;
 
 	for(ptr1 = strtok_r(classasc, ",", &saveptr1); ptr1; ptr1 = strtok_r(NULL, ",", &saveptr1))
 	{
 		ptr1 = trim(ptr1);
 		if(ptr1[0] == '!')
-			{ newclstab.bclass[newclstab.bn++] = (uchar)a2i(ptr1 + 1, 2); }
+			{ newclstab.bclass[newclstab.bn++] = (uint8_t)a2i(ptr1 + 1, 2); }
 		else
-			{ newclstab.aclass[newclstab.an++] = (uchar)a2i(ptr1, 2); }
+			{ newclstab.aclass[newclstab.an++] = (uint8_t)a2i(ptr1, 2); }
 	}
-	
+
 	NULLFREE(classasc_org);
-	
+
 	memcpy(&oldclstab, clstab, sizeof(CLASSTAB));
 	memcpy(clstab, &newclstab, sizeof(CLASSTAB));
-	
+
 	NULLFREE(oldclstab.aclass);
 	NULLFREE(oldclstab.bclass);
 }
@@ -464,6 +464,46 @@ void chk_port_tab(char *portasc, PTAB *ptab)
 			}
 			newptab->ports[iport].ncd->ncd_ftab.filts[ifilt].nprids++;
 		}
+	}
+	memcpy(ptab, newptab, sizeof(PTAB));
+	NULLFREE(newptab);
+}
+
+void chk_port_camd35_tab(char *portasc, PTAB *ptab)
+{
+	int32_t i, j, nfilts;
+	PTAB *newptab;
+	char *ptr1, *ptr2, *ptr4, *provids, *saveptr1 = NULL, *saveptr2 = NULL;
+	if(!cs_malloc(&newptab, sizeof(PTAB)))
+		{ return; }
+
+	for(nfilts = i = 0, ptr1 = strtok_r(portasc, ";", &saveptr1); (i < CS_MAXPORTS) && (ptr1); ptr1 = strtok_r(NULL, ";", &saveptr1), i++)
+	{
+		if(!newptab->ports[newptab->nports].ncd && !cs_malloc(&newptab->ports[i].ncd, sizeof(struct ncd_port)))
+			{ break; }
+		newptab->ports[newptab->nports].s_port = atoi(ptr1);
+		if((ptr2 = strchr(trim(ptr1), '@')))
+		{
+			*ptr2++ = '\0'; // clean up @ symbol
+			newptab->ports[newptab->nports].s_port = atoi(ptr1);
+			if((provids = strchr(trim(ptr2), ':')))
+				{
+					*provids++ = '\0'; // clean up : symbol
+					for(j = 0, ptr4 = strtok_r(provids, ",", &saveptr2); (i < CS_MAXPORTS) && (ptr4); ptr4 = strtok_r(NULL, ",", &saveptr2), j++)
+					{
+						newptab->ports[newptab->nports].ncd->ncd_ftab.filts[0].prids[j] = a2i(ptr4, 6);
+					}
+					newptab->ports[newptab->nports].ncd->ncd_ftab.filts[0].nprids=j;
+				}
+			newptab->ports[newptab->nports].ncd->ncd_ftab.filts[0].caid = (uint16_t)a2i(ptr2, sizeof(ptr2));
+			newptab->nports++;
+		}
+		else
+		{
+			newptab->ports[newptab->nports].s_port = atoi(ptr1);
+			if (newptab->ports[newptab->nports].s_port) { newptab->nports++; };
+		}
+		nfilts++;
 	}
 	memcpy(ptab, newptab, sizeof(PTAB));
 	NULLFREE(newptab);

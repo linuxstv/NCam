@@ -16,6 +16,11 @@
 
 uint8_t camd35_node_id[8];
 
+#define CSP_HASH_SWAP(n) (((((uint32_t)(n) & 0xFF)) << 24) | \
+                  ((((uint32_t)(n) & 0xFF00)) << 8) | \
+                  ((((uint32_t)(n) & 0xFF0000)) >> 8) | \
+                  ((((uint32_t)(n) & 0xFF000000)) >> 24))
+
 /**
  * send push filter
  */
@@ -237,7 +242,7 @@ static int32_t camd35_cacheex_push_out(struct s_client *cl, struct ecm_request_t
 
 	uint32_t size = sizeof(er->ecmd5) + sizeof(er->csp_hash) + sizeof(er->cw) + sizeof(uint8_t) +
 					(ll_count(er->csp_lastnodes) + 1) * 8;
-	unsigned char *buf;
+	uint8_t *buf;
 	if(!cs_malloc(&buf, size + 20))  //camd35_send() adds +20
 		{ return -1; }
 
@@ -274,7 +279,7 @@ static int32_t camd35_cacheex_push_out(struct s_client *cl, struct ecm_request_t
 	ofs += sizeof(er->ecmd5);
 
 	//write csp hashcode:
-	i2b_buf(4, htonl(er->csp_hash), ofs);
+	i2b_buf(4, CSP_HASH_SWAP(er->csp_hash), ofs);
 	ofs += 4;
 
 	//write cw:
@@ -304,7 +309,7 @@ static int32_t camd35_cacheex_push_out(struct s_client *cl, struct ecm_request_t
 	return res;
 }
 
-static void camd35_cacheex_push_in(struct s_client *cl, uchar *buf)
+static void camd35_cacheex_push_in(struct s_client *cl, uint8_t *buf)
 {
 	int8_t rc = buf[3];
 	if(rc != E_FOUND && rc != E_UNHANDLED)  //Maybe later we could support other rcs
@@ -314,7 +319,7 @@ static void camd35_cacheex_push_in(struct s_client *cl, uchar *buf)
 	uint16_t size = buf[1] | (buf[2] << 8);
 	if(size < sizeof(er->ecmd5) + sizeof(er->csp_hash) + sizeof(er->cw))
 	{
-		cs_log_dbg(D_CACHEEX, "cacheex: %s received old cash-push format! data ignored!", username(cl));
+		cs_log_dbg(D_CACHEEX, "cacheex: %s received old cache-push format! data ignored!", username(cl));
 		return;
 	}
 
@@ -363,7 +368,7 @@ static void camd35_cacheex_push_in(struct s_client *cl, uchar *buf)
 		{ return; }
 
 	//Read csp_hash:
-	er->csp_hash = ntohl(b2i(4, ofs));
+	er->csp_hash = CSP_HASH_SWAP(b2i(4, ofs));
 	ofs += 4;
 
 	//Read cw:
@@ -429,7 +434,7 @@ static void camd35_cacheex_push_in(struct s_client *cl, uchar *buf)
 	cacheex_add_to_cache(cl, er);
 }
 
-void camd35_cacheex_recv_ce1_cwc_info(struct s_client *cl, uchar *buf, int32_t idx)
+void camd35_cacheex_recv_ce1_cwc_info(struct s_client *cl, uint8_t *buf, int32_t idx)
 {
 	if(!(buf[0] == 0x01 && buf[18] < 0xFF && buf[18] > 0x00)) // cwc info ; normal camd3 ecms send 0xFF but we need no cycletime of 255 ;)
 		return;

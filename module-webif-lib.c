@@ -118,9 +118,9 @@ time_t parse_modifiedsince(char *value)
 void calculate_opaque(IN_ADDR_T addr, char *opaque)
 {
 	char noncetmp[128];
-	unsigned char md5tmp[MD5_DIGEST_LENGTH];
+	uint8_t md5tmp[MD5_DIGEST_LENGTH];
 	snprintf(noncetmp, sizeof(noncetmp), "%d:%s:%d", (int32_t)time(NULL), cs_inet_ntoa(addr), (int16_t)rand());
-	char_to_hex(MD5((unsigned char *)noncetmp, strlen(noncetmp), md5tmp), MD5_DIGEST_LENGTH, (unsigned char *)opaque);
+	char_to_hex(MD5((uint8_t *)noncetmp, strlen(noncetmp), md5tmp), MD5_DIGEST_LENGTH, (uint8_t *)opaque);
 }
 
 void init_noncelocks(void)
@@ -182,11 +182,11 @@ void calculate_nonce(char *nonce, char *result, char *opaque)
 	if(!foundnonce && !foundopaque)
 	{
 		char noncetmp[128], randstr[16];
-		unsigned char md5tmp[MD5_DIGEST_LENGTH];
+		uint8_t md5tmp[MD5_DIGEST_LENGTH];
 		get_random_bytes((uint8_t *)randstr, sizeof(randstr) - 1);
 		randstr[sizeof(randstr) - 1] = '\0';
 		snprintf(noncetmp, sizeof(noncetmp), "%d:%s:%s", (int32_t)now, randstr, noncekey);
-		char_to_hex(MD5((unsigned char *)noncetmp, strlen(noncetmp), md5tmp), MD5_DIGEST_LENGTH, (unsigned char *)result);
+		char_to_hex(MD5((uint8_t *)noncetmp, strlen(noncetmp), md5tmp), MD5_DIGEST_LENGTH, (uint8_t *)result);
 		if(cs_malloc(&noncelist, sizeof(struct s_nonce)))
 		{
 			noncelist->expirationdate = now + AUTHNONCEEXPIRATION;
@@ -272,17 +272,17 @@ int32_t check_auth(char *authstring, char *method, char *path, IN_ADDR_T addr, c
 	{
 		char A1tmp[3 + strlen(username) + strlen(AUTHREALM) + strlen(expectedPassword)];
 		char A1[(MD5_DIGEST_LENGTH * 2) + 1], A2[(MD5_DIGEST_LENGTH * 2) + 1], A3[(MD5_DIGEST_LENGTH * 2) + 1];
-		unsigned char md5tmp[MD5_DIGEST_LENGTH];
+		uint8_t md5tmp[MD5_DIGEST_LENGTH];
 		snprintf(A1tmp, sizeof(A1tmp), "%s:%s:%s", username, AUTHREALM, expectedPassword);
-		char_to_hex(MD5((unsigned char *)A1tmp, strlen(A1tmp), md5tmp), MD5_DIGEST_LENGTH, (unsigned char *)A1);
+		char_to_hex(MD5((uint8_t *)A1tmp, strlen(A1tmp), md5tmp), MD5_DIGEST_LENGTH, (uint8_t *)A1);
 
 		char A2tmp[2 + strlen(method) + strlen(uri)];
 		snprintf(A2tmp, sizeof(A2tmp), "%s:%s", method, uri);
-		char_to_hex(MD5((unsigned char *)A2tmp, strlen(A2tmp), md5tmp), MD5_DIGEST_LENGTH, (unsigned char *)A2);
+		char_to_hex(MD5((uint8_t *)A2tmp, strlen(A2tmp), md5tmp), MD5_DIGEST_LENGTH, (uint8_t *)A2);
 
 		char A3tmp[10 + strlen(A1) + strlen(A2) + strlen(authnonce) + strlen(authnc) + strlen(authcnonce)];
 		snprintf(A3tmp, sizeof(A3tmp), "%s:%s:%s:%s:auth:%s", A1, authnonce, authnc, authcnonce, A2);
-		char_to_hex(MD5((unsigned char *)A3tmp, strlen(A3tmp), md5tmp), MD5_DIGEST_LENGTH, (unsigned char *)A3);
+		char_to_hex(MD5((uint8_t *)A3tmp, strlen(A3tmp), md5tmp), MD5_DIGEST_LENGTH, (uint8_t *)A3);
 
 		if(strcmp(A3, authresponse) == 0)
 		{
@@ -296,6 +296,8 @@ int32_t check_auth(char *authstring, char *method, char *path, IN_ADDR_T addr, c
 			}
 		}
 	}
+	if(!authok)
+		{	cs_log("unauthorized access from %s - invalid credentials", cs_inet_ntoa(addr)); }
 	return authok;
 }
 
@@ -367,7 +369,7 @@ void send_headers(FILE *f, int32_t status, char *title, char *extra, char *mime,
 		pos += snprintf(pos, sizeof(buf) - (pos - buf), "Last-Modified: %s\r\n", timebuf);
 		if(content)
 		{
-			uint32_t checksum = (uint32_t)crc32(0L, (uchar *)content, length);
+			uint32_t checksum = (uint32_t)crc32(0L, (uint8_t *)content, length);
 			pos += snprintf(pos, sizeof(buf) - (pos - buf), "ETag: \"%u\"\r\n", checksum == 0 ? 1 : checksum);
 		}
 	}
@@ -488,7 +490,7 @@ void send_file(FILE *f, char *filename, char *subdir, time_t modifiedheader, uin
 				send_error500(f);
 				return;
 			}
-			if (CSS){
+			if (CSS && allocated != NULL){
 				snprintf(allocated, newsize, "%s\n%s\n%s", CSS, separator, (oldallocated != NULL ? oldallocated : ""));
 			}
 			if(oldallocated) { NULLFREE(oldallocated); }
@@ -525,7 +527,7 @@ void send_file(FILE *f, char *filename, char *subdir, time_t modifiedheader, uin
 
 	size = strlen(result);
 
-	if((etagheader == 0 && moddate < modifiedheader) || (etagheader > 0 && (uint32_t)crc32(0L, (uchar *)result, size) == etagheader))
+	if((etagheader == 0 && moddate < modifiedheader) || (etagheader > 0 && (uint32_t)crc32(0L, (uint8_t *)result, size) == etagheader))
 	{
 		send_header304(f, extraheader);
 	}
@@ -782,12 +784,12 @@ struct CRYPTO_dynlock_value
 };
 
 /* function really needs unsigned long to prevent compiler warnings... */
-static unsigned long SSL_id_function(void)
+unsigned long SSL_id_function(void)
 {
 	return ((unsigned long) pthread_self());
 }
 
-static void SSL_locking_function(int32_t mode, int32_t type, const char *file, int32_t line)
+void SSL_locking_function(int32_t mode, int32_t type, const char *file, int32_t line)
 {
 	if(mode & CRYPTO_LOCK)
 	{
@@ -801,7 +803,7 @@ static void SSL_locking_function(int32_t mode, int32_t type, const char *file, i
 	if(file || line) { return; }
 }
 
-static struct CRYPTO_dynlock_value *SSL_dyn_create_function(const char *file, int32_t line)
+struct CRYPTO_dynlock_value *SSL_dyn_create_function(const char *file, int32_t line)
 {
 	struct CRYPTO_dynlock_value *l;
 	if(!cs_malloc(&l, sizeof(struct CRYPTO_dynlock_value)))
@@ -819,7 +821,7 @@ static struct CRYPTO_dynlock_value *SSL_dyn_create_function(const char *file, in
 	return l;
 }
 
-static void SSL_dyn_lock_function(int32_t mode, struct CRYPTO_dynlock_value *l, const char *file, int32_t line)
+void SSL_dyn_lock_function(int32_t mode, struct CRYPTO_dynlock_value *l, const char *file, int32_t line)
 {
 	if(mode & CRYPTO_LOCK)
 	{
@@ -833,7 +835,7 @@ static void SSL_dyn_lock_function(int32_t mode, struct CRYPTO_dynlock_value *l, 
 	if(file || line) { return; }
 }
 
-static void SSL_dyn_destroy_function(struct CRYPTO_dynlock_value *l, const char *file, int32_t line)
+void SSL_dyn_destroy_function(struct CRYPTO_dynlock_value *l, const char *file, int32_t line)
 {
 	pthread_mutex_destroy(&l->mutex);
 	NULLFREE(l);
@@ -864,19 +866,33 @@ SSL_CTX *SSL_Webif_Init(void)
 	CRYPTO_set_dynlock_lock_callback(SSL_dyn_lock_function);
 	CRYPTO_set_dynlock_destroy_callback(SSL_dyn_destroy_function);
 
-	if(cfg.http_force_sslv3)
+	ctx = SSL_CTX_new(SSLv23_server_method());
+
+#if defined(SSL_CTX_set_ecdh_auto)
+		SSL_CTX_set_ecdh_auto(ctx, 1);
+#elif defined(EC_PKEY_NO_PARAMETERS) && defined(NID_X9_62_prime256v1)
+		EC_KEY *ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+		if(ecdh)
+		{
+			SSL_CTX_set_tmp_ecdh(ctx, ecdh);
+			EC_KEY_free(ecdh);
+		}
+#endif
+
+	if(cfg.https_force_secure_mode)
 	{
-		ctx = SSL_CTX_new(SSLv3_server_method());
 #ifdef SSL_CTX_clear_options
 		SSL_CTX_clear_options(ctx, SSL_OP_ALL); //we CLEAR all bug workarounds! This is for security reason
 #else
-		cs_log("WARNING: You enabled to force sslv3 but your system does not support to clear the ssl workarounds! SSL security will be reduced!");
+		cs_log("WARNING: You enabled to force secure HTTPS but your system does not support to clear the ssl workarounds! SSL security will be reduced!");
 #endif
-		SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2); // we force SSL v3 !
-		SSL_CTX_set_cipher_list(ctx, SSL_TXT_RC4);
 	}
-	else
-		{ ctx = SSL_CTX_new(SSLv23_server_method()); }
+
+#ifdef SSL_OP_NO_TLSv1_1
+	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1);
+#else
+	SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3);
+#endif
 
 	char path[128];
 
@@ -888,7 +904,7 @@ SSL_CTX *SSL_Webif_Init(void)
 	if(!ctx)
 		goto out_err;
 
-	if(SSL_CTX_use_certificate_file(ctx, path, SSL_FILETYPE_PEM) <= 0)
+	if(SSL_CTX_use_certificate_chain_file(ctx, path) <=0)
 		goto out_err;
 
 	if(SSL_CTX_use_PrivateKey_file(ctx, path, SSL_FILETYPE_PEM) <= 0)
@@ -905,7 +921,10 @@ SSL_CTX *SSL_Webif_Init(void)
 
 out_err:
 	ERR_print_errors_fp(stderr);
+#if OPENSSL_VERSION_NUMBER < 0x1010005fL
+    // fix build "OpenSSL 1.1.0e  16 Feb 2017"
 	ERR_remove_state(0);
+#endif
 	SSL_CTX_free(ctx);
 	return NULL;
 }

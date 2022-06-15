@@ -74,7 +74,7 @@ static int32_t Cool_SetClockrate(struct s_reader *reader, int32_t mhz)
 	int32_t ret = cnxt_smc_set_clock_freq(crdr_data->handle, clk);
 	coolapi_check_error("cnxt_smc_set_clock_freq", ret);
 	call(Cool_FastReset(reader));
-	rdr_log_dbg(reader, D_DEVICE, "COOL: clock succesfully set to %i", clk);
+	rdr_log_dbg(reader, D_DEVICE, "COOL: clock successfully set to %i", clk);
 	return OK;
 }
 
@@ -136,7 +136,7 @@ static int32_t Cool_Reset(struct s_reader *reader, ATR *atr)
 	ret = cnxt_smc_get_atr(crdr_data->handle, buf, &n);
 	coolapi_check_error("cnxt_smc_get_atr", ret);
 
-	call(!ATR_InitFromArray(atr, buf, n) != ERROR);
+	call(!(ATR_InitFromArray(atr, buf, n) != ERROR));
 	{
 		cs_sleepms(50);
 		return OK;

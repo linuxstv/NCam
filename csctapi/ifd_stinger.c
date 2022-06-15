@@ -290,7 +290,7 @@ int32_t Stinger_Reset(struct s_reader *reader, ATR *atr)
 		cs_sleepms(50);
 
 		IO_Serial_RTS_Clr(reader);
-		
+
 		cs_sleepms(50);
 
 		IO_Serial_Ioctl_Lock(reader, 0);
@@ -308,7 +308,7 @@ int32_t Stinger_Reset(struct s_reader *reader, ATR *atr)
 			{ continue; }
 		if(ATR_InitFromArray(atr, buf, n) != ERROR)
 			{ ret = OK; }
-		// Succesfully retrieve ATR
+		// Successfully retrieve ATR
 		if(ret == OK)
 			{ break; }
 	}

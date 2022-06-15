@@ -1,8 +1,8 @@
 .TH ncam.user 5
 .SH NAME
-\fBncam.user\fR - user configuration file for NCAm
+\fBncam.user\fR - user configuration file for NCam
 .SH SYNOPSIS
-The user configuration file for NCAm contains user definitions. [account]
+The user configuration file for NCam contains user definitions. [account]
 sections in \fBncam.user\fR are \fIrecurring\fR (more than one account).
 .SH DESCRIPTIONS
 .SS "The [account] section"
@@ -45,9 +45,24 @@ expiration date for account, default:none
 list of all allowed connection protocols, default:all connection protocols
 .RE
 .PP
-\fBallowedtimeframe\fP = \fBhh:mm\fP-\fBhh:mm\fP
+\fBallowedtimeframe\fP = \fBDAY@HH:MM-HH:MM[,HH:MM-HH:MM][,HH:MM-HH:MM] [;DAY@HH:MM-HH:MM[,HH:MM-HH:MM][,HH:MM-HH:MM]]\fP
+.RS 10n
+where DAY=\fBSUN,MON,TUE,WED,THU,FRI,SAT\fP or \fBALL\fP (for all possible days)
+.RE
 .RS 3n
-account enabled from hh:mm to hh:mm, default:none
+
+account enabled from hh:mm to hh:mm for the specified day(s), default:none
+
+comma (,) to separate times and semicolon(; ) to separate the different days.
+You can use ALL@ if you want the same time frames for everyday.
+
+Example:
+
+allowedtimeframe=ALL@10:00-22:00;MON@00:00-02:00,02:45-04:37; FRI@00:00-10:00,22:00-24:00;SAT@00:00-24:00
+
+If you use: DAY@22:00-05:00 this will be turned into DAY@00:00-05:00,22:00-24:00
+
+ALL@ is always checked and used, so you can watch TV the whole day on FRIday in this exemple. There is no problem to overlap ALL@ in a day definition, like for SAT@ definition.
 .RE
 .PP
 \fBmax_connections\fP = \fBcount\fP
@@ -61,12 +76,12 @@ unique level:
 
  \fB0\fP = disabled (default)
  \fB1\fP = only one connection per user is allowed
- \fB2\fP = set user to fake if source ip is different 
+ \fB2\fP = set user to fake if source ip is different
      (e.g. for newcamd clients with different CAIDs and ports)
- \fB3\fP = only one connection per user, but only the last login 
+ \fB3\fP = only one connection per user, but only the last login
      will survive (old MpCS behavior)
- \fB4\fP = set user only to fake if source ip is different, 
-     but only the last login will survive 
+ \fB4\fP = set user only to fake if source ip is different,
+     but only the last login will survive
 .RE
 .PP
 \fBnumusers\fP = \fBquantity\fP
@@ -93,6 +108,11 @@ set fake delay time individually for user:
  \fB-1\fP = fake delay of ncam.conf (default)
 .RE
 .PP
+\fBacosc_max_ecms_per_minute\fP = \fBcount\fP
+.RS 3n
+maximum ecms per minute, 0 = unlimited, -1 = use global setting, default:0
+.RE
+.PP
 \fBacosc_max_active_sids\fP = \fBcount\fP
 .RS 3n
 maximum active SIDs with anti-cascading over SID, 0 = unlimited, -1 = use global setting, default:0
@@ -103,7 +123,7 @@ maximum active SIDs with anti-cascading over SID, 0 = unlimited, -1 = use global
 zap limit for anti-cascading over SID, 0 = unlimited, -1 = use global setting, default:0
 .RE
 .PP
-\fBacosc_penalty\fP = \fB0\fP|\fB1\fP|\fB2\fP|\fB3\fP|\fB-1\fP
+\fBacosc_penalty\fP = \fB0\fP|\fB1\fP|\fB2\fP|\fB3\fP|\fB4\fP|\fB-1\fP
 .RS 3n
 level of penalty with anti-cascading over SID count:
 
@@ -111,6 +131,7 @@ level of penalty with anti-cascading over SID count:
   \fB1\fP = send fake CWs
   \fB2\fP = temporary user ban
   \fB3\fP = send delayed CWs
+  \fB4\fP = temporary hidecards to the client
  \fB-1\fP = use global setting
 .RE
 .PP
@@ -173,12 +194,12 @@ set cache exchange mode
 
  \fB0\fP: disable cache exchange mode (default)
  \fB1\fP: enable cache exchange pull mode
- \fB2\fP: enable cache exchange push mode for camd 3.5x / 3.57x and 
+ \fB2\fP: enable cache exchange push mode for camd 3.5x / 3.57x and
     CCcam protocol
- \fB3\fP: enable reverse cache exchange push mode for camd 3.5x / 3.57x 
+ \fB3\fP: enable reverse cache exchange push mode for camd 3.5x / 3.57x
     and CCcam protocol
 
-\fIIdentical cache exchange modes must be set on local NCAm user account and remote NCAm server.\fR
+\fIIdentical cache exchange modes must be set on local NCam user account and remote NCam server.\fR
 
 \fIPlease consider memory consumption.\fR
 .RE
@@ -191,7 +212,7 @@ define maximum hops for cache exchange, default=10
 \fBno_wait_time\fP = \fB0\fP|\fB1\fP
 .RS 3n
 set wait time behaviour:
- 
+
  \fB0\fP: use \fBwait_time\fP set in \fBncam.conf\fP (default)
  \fB1\fP: do not use \fBwait_time\fP set in \fBncam.conf\fP
 .RE
@@ -228,12 +249,12 @@ time waiting for inactive user, default:none
 .PP
 \fBsleepsend\fP = \fB0\fP|\fB255\fP
 .RS 3n
-255 = \fINCAm client only\fR: stopping requests until next zap, 255 = \fIcamd 3.x only\fR: stopping requests until restart of camd 3.x client, default:0
+255 = \fINCam client only\fR: stopping requests until next zap, 255 = \fIcamd 3.x only\fR: stopping requests until restart of camd 3.x client, default:0
 .RE
 .PP
 \fBsuppresscmd08\fP = \fB0\fP|\fB1\fP
 .RS 3n
-0 = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected 
+0 = tell camd 3.5x, 3.57x and 3.78x clients not to request again for rejected
 CAID, service ID and provider ID combination, 1 =  disable, default:0
 .RE
 .PP
@@ -262,7 +283,7 @@ example: caid = 0100
 .RS 3n
 AU setting, default:none:
 
-  \fBlabel of reader\fP = sending EMMs to specified reader 
+  \fBlabel of reader\fP = sending EMMs to specified reader
                     \fI(security issue: clients can see SC data!)\fR
   \fB1\fP               = auto AU is sending EMMs to \fIall\fR readers
                     \fI(security issue: clients can see SC data!)\fR
@@ -288,9 +309,9 @@ The ServiceID can also be used for wildcarded CAIDs.
 .PP
 \fBemmreassembly\fP = \fB0\fP|\fB1\fP||\fB2\fP
 .RS 3n
-EMM reassembly, should be set for Viaccess and Cryptoworks readers if the 
-client that you are using to send EMMs is reassembling them instead of 
-just sending them to NCAm for processing.
+EMM reassembly, should be set for Viaccess and Cryptoworks readers if the
+client that you are using to send EMMs is reassembling them instead of
+just sending them to NCam for processing.
 
   \fB0\fP: disabled
   \fB1\fP: enabled for DVB API
@@ -364,10 +385,10 @@ CCcam ignore reshare setting:
 CCcam stealth:
 
  \fB-1\fP = use CCcam stealth of \fBncam.conf\fR (default)
-  \fB0\fP = use extended NCAm-CCcam protocol
-  \fB1\fP = behaviour like the original CCcam: no activate partner 
-      detection and extended NCAm-CCcam protocol, prevent 
-      other NCAm to detect the server as NCAm server
+  \fB0\fP = use extended NCam-CCcam protocol
+  \fB1\fP = behaviour like the original CCcam: no activate partner
+      detection and extended NCam-CCcam protocol, prevent
+      other NCam to detect the server as NCam server
 .RE
 .SH EXAMPLES
  [account]
@@ -377,7 +398,7 @@ CCcam stealth:
  au         = myserialmousereader
  services   = myservice
  betatunnel = 0100.0001:0101,0100.0002:0101
- caid       = 0100 
+ caid       = 0100
  ident      = 0100:000000
  uniq       = 1
 .SH "SEE ALSO"

@@ -1,78 +1,7 @@
 ##TPLHEADERSHORT##
-<script type="text/JavaScript">
-function imgrequest( url, el )
-{
-	var httpRequest;
-	try { httpRequest = new XMLHttpRequest(); }
-	catch (trymicrosoft) { try { httpRequest = new ActiveXObject('Msxml2.XMLHTTP'); } catch (oldermicrosoft) { try { httpRequest = new ActiveXObject('Microsoft.XMLHTTP'); } catch(failed) { httpRequest = false; } } }
-	if (!httpRequest) { alert('Your browser does not support Ajax.'); return false; }
-	if ( typeof(el)!='undefined' ) {
-		el.onclick = null;
-		el.style.opacity = '0.7';
-		httpRequest.onreadystatechange = function()
-		{
-			if (httpRequest.readyState == 4) if (httpRequest.status == 200) el.style.opacity = '0.3';
-		}
-	}
-	httpRequest.open('GET', url, true);
-	httpRequest.send(null);
-}
-var autorefresh=3000;
-var tautorefresh;
-function setautorefresh(t)
-{
-	clearTimeout(tautorefresh);
-	autorefresh = t;
-	if (t>0) tautorefresh = setTimeout('updateDiv()',autorefresh);
-}
-function updateDiv()
-{
-	var httpRequest;
-	try {
-		httpRequest = new XMLHttpRequest();
-	}
-	catch(trymicrosoft) {
-		try {
-			httpRequest = new ActiveXObject('Msxml2.XMLHTTP');
-		}
-		catch(oldermicrosoft) {
-			try {
-				httpRequest = new ActiveXObject('Microsoft.XMLHTTP');
-			}
-			catch(failed) {
-				httpRequest = false;
-			}
-		}
-	}
-	if (!httpRequest) {
-		alert('Your browser does not support Ajax.');
-		return false;
-	}
-	httpRequest.onreadystatechange = function()
-	{
-		if (httpRequest.readyState == 4) {
-			if(httpRequest.status == 200) {
-				requestError=0;
-				document.getElementById('wrapper').innerHTML = httpRequest.responseText;
-			}
-			tautorefresh = setTimeout('updateDiv()',autorefresh);
-		}
-	}
-	httpRequest.open('GET', '/?action=div', true);
-	httpRequest.send(null);
-}
-function start()
-{
-	setautorefresh(autorefresh);
-}
-
-	</script>
-	<SCRIPT TYPE="text/javascript">var counter=##REFRESHTIME##;var counterfull=##REFRESHTIME##;var withquery=##WITHQUERY##;window.onload = function() {
-	start();
-	}
-	</SCRIPT>
+##REFRESH##
 	<script type="text/javascript">
-	
+
 	var page = 'status';
 	var jsonurl = 'ncamapi.json';
 	var parameters = '?part=status';
@@ -82,11 +11,17 @@ function start()
 	var pollrefresh = '##POLLREFRESHTIME##';
 
 	</script>
-
 ##TPLBODY##
 ##TPLMENU##
+<div id = "chart">
+	<div id = "charthead" ></div>
+	<div id = "graph" ></div>
+</div>
+<DIV ID="subnav">
 <br>
+</DIV>
 ##TPLMESSAGE##
+<DIV>
 <TABLE CLASS="status">
 	<TR>
 		<TH COLSPAN="2" CLASS="statuscol0">Hide/Reset</TH>
@@ -107,8 +42,6 @@ function start()
 <tbody id="tbodyc">##CLIENTHEADLINE####CLIENTSTATUS##</tbody>
 </TABLE>
 <br>
-<div align=left>Autorefresh: <select onchange='setautorefresh(this.options[this.selectedIndex].value);'><option value=0>OFF</option><option value=3000 selected>ON</option>></select></div>
-
 ##LOG_HISTORY##
 <DIV CLASS="info ##DISPLAYINFO##">
 <TABLE CLASS="infotable">
@@ -117,6 +50,7 @@ function start()
 ##TPLCACHEEXINFOBIT##
 ##TPLSYSTEMINFOBIT##
 </TABLE>
+</DIV>
 </DIV>
 <DIV id="picolor"></DIV>
 ##TPLFOOTER##

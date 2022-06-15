@@ -1,10 +1,11 @@
 	<input name="part" type="hidden" value="dvbapi">
-	<input name="enabled" type="hidden" value="0">
+	<input name="dvbapi_enabled" type="hidden" value="0">
 	<input name="au" type="hidden" value="0">
+	<input name="ecminfo_file" type="hidden" value="0">
 	<input name="write_sdt_prov" type="hidden" value="0">
 	<TABLE CLASS="config">
 		<TR><TH COLSPAN="2">Edit DVB Api Config</TH></TR>
-		<TR><TD><A>Enabled:</A></TD><TD><input name="enabled" type="checkbox" value="1" ##ENABLEDCHECKED##><label></label>
+		<TR><TD><A>Enabled:</A></TD><TD><input name="dvbapi_enabled" type="checkbox" value="1" ##ENABLEDCHECKED##><label></label>
 		<TR><TD><A>AU:</A></TD><TD><input name="au" type="checkbox" value="1" ##AUCHECKED##><label></label>
 		<TR><TD><A>Boxtype:</A></TD><TD><select name="boxtype">##BOXTYPE##</select></TD></TR>
 		<TR><TD><A data-p="user_2">User:</A></TD><TD><input name="user" class="longer" type="text" maxlength="63" value="##USERNAME##"></TD></TR>
@@ -31,6 +32,8 @@
 		</TR>
 		<TR><TD><A>Listen port:</A></TD><TD><input name="listen_port" class="short" type="text" maxlength="5" value="##LISTENPORT##"> TCP port to listen instead of camd.socket</TD></TR>
 		<TR><TD><A>Delayer:</A></TD><TD><input name="delayer" class="withunit short" type="text" maxlength="4" value="##DELAYER##"> ms</TD></TR>
+##WISOCKETID##
+		<TR><TD><A>Enable ecm.info file:</A></TD><TD><input name="ecminfo_file" type="checkbox" value="1" ##ECMINFOFILECHECKED##><label></label>
 		<TR><TD><A>ecm.info type:</A></TD>
 			<TD>
 				<select name="ecminfo_type">
@@ -40,6 +43,7 @@
 					<option value="3" ##ECMINFOTYPESELECTED3##>3 - mgcamd</option>
 					<option value="4" ##ECMINFOTYPESELECTED4##>4 - cccam</option>
 					<option value="5" ##ECMINFOTYPESELECTED5##>5 - camd3</option>
+					<option value="6" ##ECMINFOTYPESELECTED6##>6 - gbox</option>
 				</select>
 			</TD>
 		</TR>
@@ -61,4 +65,19 @@
 					<option value="2" ##EXTENDEDCWAPISELECTED2##>2 - OE2.0</option>
 				</select>
 			</TD>
-		</TR>		
+		</TR>
+		<TR><TD><A>Max pids for extended CWs</A></TD>
+			<TD>
+				<select name="extended_cw_pids">
+					<option value="2" ##EXTENDEDCWPIDSSELECTED2##>2</option>
+					<option value="3" ##EXTENDEDCWPIDSSELECTED3##>3</option>
+					<option value="4" ##EXTENDEDCWPIDSSELECTED4##>4</option>
+					<option value="5" ##EXTENDEDCWPIDSSELECTED5##>5</option>
+					<option value="6" ##EXTENDEDCWPIDSSELECTED6##>6</option>
+					<option value="7" ##EXTENDEDCWPIDSSELECTED7##>7</option>
+					<option value="8" ##EXTENDEDCWPIDSSELECTED8##>8</option>
+					<option value="16" ##EXTENDEDCWPIDSSELECTED16##>16</option>
+					<option value="32" ##EXTENDEDCWPIDSSELECTED32##>32</option>
+				</select>
+			</TD>
+		</TR>
